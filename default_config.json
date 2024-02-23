@@ -1,0 +1,5 @@
+{
+    "token" : "Insert bot's token here",
+    "channelId" : "Insert channelId here",
+    "messageContent" : "React to the following message to get your roles !"
+}
