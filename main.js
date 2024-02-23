@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const bot = new Discord.Client({intents: 3276797});
 const config = require("./config.json");
 
-let msg = undefined;
+let roleMessage = undefined;
 
 console.log("STARTING BOT...");
 
@@ -16,13 +16,13 @@ bot.on("ready", () => {
         channel.messages.fetch({limit:100}).then((messages) => {
             messages.every((message) => {
                 if(message.content === config.messageContent && message.author.id === bot.user.id) {
-                    msg = message;
+                    roleMessage = message;
                     return false;
                 }
                 return true;
             });
 
-            if(msg === undefined) {
+            if(roleMessage === undefined) {
                 console.warn("The reaction role message was not found in the last 100 messages of the channel, resending it...");
                 channel.send(config.messageContent);
                 console.log("message resended");
