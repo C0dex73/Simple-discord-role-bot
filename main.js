@@ -13,10 +13,16 @@ bot.login(config.token);
 
 console.log("bot logged in")
 
+let associateRole = async (emoji) => {
+    let emojiID = (emoji.id === null) ? "0".concat(emoji.name.codePointAt(0).toString(16)) : "1".concat(emoji.id.toString())
+    let [guildID, roleID] = pairsBuffer[emojiID].split('.');
+    return await bot.guilds.fetch(guildID).then((guild) => guild.roles.fetch(roleID))
+}
+
 bot.on("ready", () => {
     console.log("bot ready");
-    bot.channels.fetch(config.channelId).then((channel) => {
-        channel.messages.fetch({limit:100}).then(async (messages) => {
+    bot.channels.fetch(config.channelId).then(async (channel) => {
+        await channel.messages.fetch({limit:100}).then(async (messages) => {
             messages.every((message) => {
                 if(message.content === config.messageContent && message.author.id === bot.user.id) {
                     roleMessage = message;
@@ -31,6 +37,22 @@ bot.on("ready", () => {
                 console.log("message resended");
             }
         });
+        let collector = roleMessage.createReactionCollector();
+        collector.options.dispose = true;
+
+        collector.on("collect", async (reaction, usr) => {
+            if(usr.bot) { return;}
+            let role = await associateRole(reaction.emoji);
+            let member = await role.guild.members.fetch(usr.id);
+            if(!member.roles.cache.has(role)) { member.roles.add(role); }
+        });
+
+        collector.on("remove", async (reaction, usr) => {
+            if(usr.bot) { return;}
+            let role = await associateRole(reaction.emoji);
+            let member = await role.guild.members.fetch(usr.id);
+            member.roles.remove(role);
+        });
     });
 });
 
@@ -42,6 +64,7 @@ bot.on("messageCreate", (msg) => {
             let command = require(`./commands/${file}`);
             if(command["name"] === msg.content.substring(1).trimStart().split(" ")[0]){
                 try{
+                    if(command["run"] === false && !msg.inGuild()) { return msg.reply("This command is not available in dm"); }
                     let pairsBufferUnsafe = command["run"](bot, msg, roleMessage, pairsBuffer);
                     let toWrite = config;
                     toWrite.pairs = pairsBufferUnsafe;
@@ -61,10 +84,6 @@ bot.on("messageCreate", (msg) => {
         });
     }
 });
-
-bot.on("MessageReactionAdd", (msg, usr) => {
-    //~ roleMessage.reactions.cache
-})
 
 
 /*
