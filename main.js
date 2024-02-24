@@ -5,18 +5,18 @@ const config = require("./config.json");
 const fs = require("fs");
 
 let roleMessage = undefined;
-let pairsBuffer = config.pairs
+let pairsBuffer = config.pairs //  emoji : role
 
-console.log("STARTING BOT...");
+console.log("starting bot...");
 
 bot.login(config.token);
 
-console.log("BOT LOGGED IN");
+console.log("bot logged in")
 
 bot.on("ready", () => {
-    console.log("BOT READY");
+    console.log("bot ready");
     bot.channels.fetch(config.channelId).then((channel) => {
-        channel.messages.fetch({limit:100}).then((messages) => {
+        channel.messages.fetch({limit:100}).then(async (messages) => {
             messages.every((message) => {
                 if(message.content === config.messageContent && message.author.id === bot.user.id) {
                     roleMessage = message;
@@ -27,7 +27,7 @@ bot.on("ready", () => {
 
             if(roleMessage === undefined) {
                 console.warn("The reaction role message was not found in the last 100 messages of the channel, resending it...");
-                channel.send(config.messageContent);
+                roleMessage = await channel.send(config.messageContent);
                 console.log("message resended");
             }
         });
@@ -73,5 +73,5 @@ add :emoji: @role.
 ==> user click emoji (react) -> role given
 
 remove :emoji:
-==> bot remove react and all reacts
+==> bot remove react and all reacts 
 */
